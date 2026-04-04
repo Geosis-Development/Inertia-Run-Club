@@ -4,26 +4,38 @@ import { Link } from "react-router-dom";
 import { db } from "../firebase";
 
 const ZONES = [
-  { name: "Pacer Elite", emoji: "⚡", min: 20, color: "#FFD700" },
-  { name: "Fired Up",    emoji: "🔥", min: 12, color: "#FF6B35" },
-  { name: "Grinder",     emoji: "💪", min: 6,  color: "#4cafef" },
-  { name: "On The Move", emoji: "🏃", min: 2,  color: "#aaa" },
-  { name: "Fresh Legs",  emoji: "🌱", min: 0,  color: "#7ec87e" },
+  { name: "Pacer Elite", emoji: "⚡", min: 20, color: "#00f5a0", desc: "20+ runs" },
+  { name: "Fired Up",    emoji: "🔥", min: 12, color: "#FF6B35", desc: "12–19 runs" },
+  { name: "Grinder",     emoji: "💪", min: 6,  color: "#4cafef", desc: "6–11 runs" },
+  { name: "On The Move", emoji: "🏃", min: 2,  color: "#b388ff", desc: "2–5 runs" },
+  { name: "Fresh Legs",  emoji: "🌱", min: 0,  color: "#aaa",    desc: "1 run" },
 ];
 
 function getZone(runs) {
   return ZONES.find((z) => runs >= z.min) || ZONES[ZONES.length - 1];
 }
 
-function Leaderboard() {
+function getNextZone(runs) {
+  const currentIndex = ZONES.findIndex((z) => runs >= z.min);
+  if (currentIndex <= 0) return null;
+  return ZONES[currentIndex - 1];
+}
 
+function getProgress(runs) {
+  const currentIndex = ZONES.findIndex((z) => runs >= z.min);
+  if (currentIndex <= 0) return 100;
+  const current = ZONES[currentIndex];
+  const next = ZONES[currentIndex - 1];
+  return Math.round(((runs - current.min) / (next.min - current.min)) * 100);
+}
+
+export default function Leaderboard() {
   const [leaders, setLeaders] = useState([]);
   const [activeZone, setActiveZone] = useState("All");
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-
-    const unsubscribe = onSnapshot(collection(db, "runs"), (snapshot) => {
-
+    const unsub = onSnapshot(collection(db, "runs"), (snapshot) => {
       const runnerMap = {};
 
       snapshot.docs.forEach((doc) => {
@@ -52,15 +64,16 @@ function Leaderboard() {
           ...r,
           score: r.runs * 100 + r.totalKm * 5,
           zone: getZone(r.runs),
+          progress: getProgress(r.runs),
+          nextZone: getNextZone(r.runs),
         }))
         .sort((a, b) => b.score - a.score);
 
       setLeaders(sorted);
-
+      setLoaded(true);
     });
 
-    return () => unsubscribe();
-
+    return () => unsub();
   }, []);
 
   const filtered = activeZone === "All"
@@ -68,116 +81,457 @@ function Leaderboard() {
     : leaders.filter((r) => r.zone.name === activeZone);
 
   return (
-    <div style={styles.container}>
+    <div style={styles.page}>
 
-      <div style={styles.header}>
-        <h1 style={styles.title}>🏆 Leaderboard</h1>
-        <p style={styles.subtitle}>Ranked by attendance + distance</p>
-      </div>
-
-      {/* ZONE FILTER TABS */}
-      <div style={styles.tabs}>
-        {["All", ...ZONES.map((z) => z.name)].map((zone) => (
-          <button
-            key={zone}
-            style={{
-              ...styles.tab,
-              background: activeZone === zone ? "#e6d28f" : "#111",
-              color: activeZone === zone ? "#000" : "#fff",
-            }}
-            onClick={() => setActiveZone(zone)}
-          >
-            {zone === "All" ? "All Runners" : `${ZONES.find(z => z.name === zone)?.emoji} ${zone}`}
-          </button>
-        ))}
-      </div>
+      {/* HERO */}
+      <section style={styles.hero}>
+        <p style={styles.eyebrow}>Who's Putting In The Work</p>
+        <h1 style={styles.heroTitle}>Leaderboard</h1>
+        <p style={styles.heroSubtitle}>
+          Ranked by consistency. Divided by zone. United by the run.
+        </p>
+      </section>
 
       {/* ZONE LEGEND */}
-      <div style={styles.legend}>
-        {ZONES.map((z) => (
-          <div key={z.name} style={styles.legendItem}>
-            <span style={{ ...styles.legendDot, background: z.color }} />
-            <span style={styles.legendText}>
-              {z.emoji} {z.name} — {z.min === 20 ? "20+" : z.min === 0 ? "1" : `${z.min}–${ZONES[ZONES.indexOf(z) - 1].min - 1}`} runs
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* LEADERBOARD LIST */}
-      {filtered.length === 0 ? (
-        <p style={{ color: "#aaa", textAlign: "center", marginTop: "40px" }}>
-          No runners in this zone yet.
-        </p>
-      ) : (
-        filtered.map((runner, index) => (
-          <Link
-            key={runner.uid}
-            to={`/runner/${runner.email}`}
-            style={styles.cardLink}
-          >
-            <div style={styles.card}>
-
-              <div style={styles.rank}>
-                {index === 0 && activeZone === "All" ? "🥇" :
-                 index === 1 && activeZone === "All" ? "🥈" :
-                 index === 2 && activeZone === "All" ? "🥉" :
-                 `#${index + 1}`}
-              </div>
-
-              <img src={runner.avatar} style={styles.avatar} alt={runner.name} />
-
-              <div style={styles.info}>
-                <div style={styles.name}>{runner.name}</div>
-                <div style={styles.stats}>
-                  {runner.runs} runs • {runner.totalKm.toFixed(1)} km
-                </div>
-              </div>
-
-              <div style={styles.right}>
-                <div
-                  style={{
-                    ...styles.zoneBadge,
-                    background: runner.zone.color + "22",
-                    border: `1px solid ${runner.zone.color}`,
-                    color: runner.zone.color,
-                  }}
-                >
-                  {runner.zone.emoji} {runner.zone.name}
-                </div>
-                <div style={styles.score}>{Math.round(runner.score)} pts</div>
-              </div>
-
+      <section style={styles.legendSection}>
+        <div style={styles.legendGrid}>
+          {ZONES.map((z) => (
+            <div key={z.name} style={styles.legendCard}>
+              <span style={styles.legendEmoji}>{z.emoji}</span>
+              <p style={{ ...styles.legendName, color: z.color }}>{z.name}</p>
+              <p style={styles.legendDesc}>{z.desc}</p>
             </div>
-          </Link>
-        ))
-      )}
+          ))}
+        </div>
+      </section>
 
+      <div style={styles.container}>
+
+        {/* FILTER TABS */}
+        <div style={styles.tabs}>
+          {["All", ...ZONES.map((z) => z.name)].map((zone) => (
+            <button
+              key={zone}
+              style={{
+                ...styles.tab,
+                background: activeZone === zone ? "var(--accent)" : "var(--surface)",
+                color: activeZone === zone ? "#0a0a0a" : "var(--text2)",
+                border: activeZone === zone
+                  ? "1px solid var(--accent)"
+                  : "1px solid var(--border)",
+              }}
+              onClick={() => setActiveZone(zone)}
+            >
+              {zone === "All"
+                ? "All Runners"
+                : `${ZONES.find((z) => z.name === zone)?.emoji} ${zone}`}
+            </button>
+          ))}
+        </div>
+
+        {/* SUMMARY */}
+        <div style={styles.summary}>
+          <span style={styles.summaryText}>
+            {filtered.length} runner{filtered.length !== 1 ? "s" : ""}
+            {activeZone !== "All" ? ` in ${activeZone}` : " total"}
+          </span>
+        </div>
+
+        {/* LIST */}
+        {!loaded ? (
+          <div style={styles.loadingRow}>
+            <div style={styles.loadingDot} />
+            <p style={{ color: "var(--text2)" }}>Loading runners...</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div style={styles.empty}>
+            <p style={styles.emptyEmoji}>👟</p>
+            <p style={styles.emptyText}>No runners in this zone yet.</p>
+            <p style={styles.emptySubtext}>Be the first to join a run!</p>
+          </div>
+        ) : (
+          <div style={styles.list}>
+            {filtered.map((runner, index) => {
+              const isTop3 = index < 3 && activeZone === "All";
+              const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉";
+
+              return (
+                <Link
+                  key={runner.uid}
+                  to={`/runner/${runner.email}`}
+                  style={styles.cardLink}
+                >
+                  <div
+                    style={{
+                      ...styles.card,
+                      borderColor: isTop3
+                        ? runner.zone.color + "66"
+                        : "var(--border)",
+                      background: isTop3
+                        ? runner.zone.color + "08"
+                        : "var(--surface)",
+                    }}
+                  >
+
+                    {/* RANK */}
+                    <div style={styles.rank}>
+                      {isTop3 ? (
+                        <span style={styles.medal}>{medal}</span>
+                      ) : (
+                        <span style={styles.rankNum}>#{index + 1}</span>
+                      )}
+                    </div>
+
+                    {/* AVATAR */}
+                    <div style={styles.avatarWrapper}>
+                      <img
+                        src={runner.avatar}
+                        style={{
+                          ...styles.avatar,
+                          borderColor: runner.zone.color,
+                        }}
+                        alt={runner.name}
+                      />
+                      <span style={styles.zoneEmoji}>
+                        {runner.zone.emoji}
+                      </span>
+                    </div>
+
+                    {/* INFO */}
+                    <div style={styles.info}>
+                      <p style={styles.name}>{runner.name}</p>
+
+                      <div style={styles.statsRow}>
+                        <span style={styles.stat}>
+                          {runner.runs} run{runner.runs !== 1 ? "s" : ""}
+                        </span>
+                        <span style={styles.statDot}>·</span>
+                        <span style={styles.stat}>
+                          {runner.totalKm.toFixed(1)} km
+                        </span>
+                      </div>
+
+                      {/* PROGRESS BAR */}
+                      <div style={styles.progressWrapper}>
+                        <div style={styles.progressTrack}>
+                          <div
+                            style={{
+                              ...styles.progressFill,
+                              width: `${runner.progress}%`,
+                              background: runner.zone.color,
+                            }}
+                          />
+                        </div>
+                        {runner.nextZone && (
+                          <span style={styles.progressLabel}>
+                            → {runner.nextZone.emoji} {runner.nextZone.name}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* RIGHT */}
+                    <div style={styles.right}>
+                      <div
+                        style={{
+                          ...styles.zoneBadge,
+                          background: runner.zone.color + "18",
+                          border: `1px solid ${runner.zone.color}55`,
+                          color: runner.zone.color,
+                        }}
+                      >
+                        {runner.zone.name}
+                      </div>
+                      <p style={styles.score}>
+                        {Math.round(runner.score)} pts
+                      </p>
+                    </div>
+
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }
 
 const styles = {
-  container: { padding: "80px 40px", maxWidth: "800px", margin: "auto" },
-  header: { textAlign: "center", marginBottom: "40px" },
-  title: { fontSize: "42px", marginBottom: "10px" },
-  subtitle: { color: "#aaa" },
-  tabs: { display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "30px", justifyContent: "center" },
-  tab: { padding: "8px 16px", borderRadius: "20px", border: "none", cursor: "pointer", fontWeight: "600", fontSize: "13px", transition: "all 0.2s" },
-  legend: { display: "flex", flexDirection: "column", gap: "8px", background: "#111", padding: "20px", borderRadius: "12px", marginBottom: "40px" },
-  legendItem: { display: "flex", alignItems: "center", gap: "10px" },
-  legendDot: { width: "10px", height: "10px", borderRadius: "50%", flexShrink: 0 },
-  legendText: { color: "#ccc", fontSize: "14px" },
-  cardLink: { textDecoration: "none", color: "white" },
-  card: { display: "flex", alignItems: "center", gap: "20px", background: "#111", padding: "18px 20px", borderRadius: "12px", marginBottom: "12px", transition: "background 0.2s" },
-  rank: { fontSize: "22px", width: "44px", textAlign: "center", flexShrink: 0 },
-  avatar: { width: "52px", height: "52px", borderRadius: "50%", objectFit: "cover", flexShrink: 0 },
-  info: { flex: 1 },
-  name: { fontWeight: "600", fontSize: "16px", marginBottom: "4px" },
-  stats: { color: "#aaa", fontSize: "13px" },
-  right: { display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" },
-  zoneBadge: { padding: "4px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: "600" },
-  score: { color: "#e6d28f", fontWeight: "700", fontSize: "15px" },
-};
+  page: {
+    marginTop: "64px",
+  },
 
-export default Leaderboard;
+  // HERO
+  hero: {
+    padding: "80px 24px",
+    textAlign: "center",
+    background: "var(--surface)",
+    borderBottom: "1px solid var(--border)",
+  },
+  eyebrow: {
+    fontSize: "12px",
+    fontWeight: "600",
+    letterSpacing: "3px",
+    textTransform: "uppercase",
+    color: "var(--accent)",
+    marginBottom: "12px",
+  },
+  heroTitle: {
+    fontSize: "clamp(36px, 7vw, 64px)",
+    fontWeight: "700",
+    color: "var(--text)",
+    marginBottom: "16px",
+  },
+  heroSubtitle: {
+    color: "var(--text2)",
+    fontSize: "16px",
+    maxWidth: "440px",
+    margin: "0 auto",
+    lineHeight: 1.7,
+  },
+
+  // LEGEND
+  legendSection: {
+    padding: "40px 24px",
+    borderBottom: "1px solid var(--border)",
+    background: "var(--bg)",
+  },
+  legendGrid: {
+    display: "flex",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    gap: "12px",
+    maxWidth: "900px",
+    margin: "0 auto",
+  },
+  legendCard: {
+    background: "var(--surface)",
+    border: "1px solid var(--border)",
+    borderRadius: "12px",
+    padding: "16px 24px",
+    textAlign: "center",
+    minWidth: "120px",
+  },
+  legendEmoji: {
+    fontSize: "24px",
+    display: "block",
+    marginBottom: "6px",
+  },
+  legendName: {
+    fontSize: "13px",
+    fontWeight: "700",
+    marginBottom: "4px",
+  },
+  legendDesc: {
+    fontSize: "11px",
+    color: "var(--text3)",
+  },
+
+  // CONTAINER
+  container: {
+    padding: "48px 24px",
+    maxWidth: "800px",
+    margin: "0 auto",
+  },
+
+  // TABS
+  tabs: {
+    display: "flex",
+    gap: "8px",
+    flexWrap: "wrap",
+    marginBottom: "24px",
+  },
+  tab: {
+    padding: "8px 16px",
+    borderRadius: "20px",
+    fontSize: "13px",
+    fontWeight: "600",
+    cursor: "pointer",
+    transition: "all 0.2s",
+  },
+
+  // SUMMARY
+  summary: {
+    marginBottom: "24px",
+  },
+  summaryText: {
+    fontSize: "13px",
+    color: "var(--text3)",
+  },
+
+  // LOADING
+  loadingRow: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    padding: "60px 0",
+    gap: "16px",
+  },
+  loadingDot: {
+    width: "12px",
+    height: "12px",
+    borderRadius: "50%",
+    background: "var(--accent)",
+  },
+
+  // EMPTY
+  empty: {
+    textAlign: "center",
+    padding: "80px 0",
+  },
+  emptyEmoji: {
+    fontSize: "48px",
+    marginBottom: "16px",
+  },
+  emptyText: {
+    fontSize: "18px",
+    fontWeight: "600",
+    color: "var(--text)",
+    marginBottom: "8px",
+  },
+  emptySubtext: {
+    color: "var(--text2)",
+    fontSize: "14px",
+  },
+
+  // LIST
+  list: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+  },
+  cardLink: {
+    textDecoration: "none",
+    color: "var(--text)",
+    display: "block",
+  },
+  card: {
+    display: "flex",
+    alignItems: "center",
+    gap: "16px",
+    padding: "20px",
+    borderRadius: "16px",
+    border: "1px solid var(--border)",
+    transition: "transform 0.15s ease, box-shadow 0.15s ease",
+    cursor: "pointer",
+  },
+
+  // RANK
+  rank: {
+    width: "40px",
+    textAlign: "center",
+    flexShrink: 0,
+  },
+  medal: {
+    fontSize: "28px",
+  },
+  rankNum: {
+    fontSize: "14px",
+    fontWeight: "700",
+    color: "var(--text3)",
+  },
+
+  // AVATAR
+  avatarWrapper: {
+    position: "relative",
+    flexShrink: 0,
+  },
+  avatar: {
+    width: "52px",
+    height: "52px",
+    borderRadius: "50%",
+    objectFit: "cover",
+    border: "2px solid",
+    display: "block",
+  },
+  zoneEmoji: {
+    position: "absolute",
+    bottom: "-4px",
+    right: "-4px",
+    fontSize: "14px",
+    background: "var(--bg)",
+    borderRadius: "50%",
+    width: "20px",
+    height: "20px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // INFO
+  info: {
+    flex: 1,
+    minWidth: 0,
+  },
+  name: {
+    fontSize: "16px",
+    fontWeight: "600",
+    color: "var(--text)",
+    marginBottom: "4px",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  statsRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    marginBottom: "8px",
+  },
+  stat: {
+    fontSize: "13px",
+    color: "var(--text2)",
+  },
+  statDot: {
+    color: "var(--text3)",
+    fontSize: "13px",
+  },
+
+  // PROGRESS
+  progressWrapper: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  },
+  progressTrack: {
+    flex: 1,
+    height: "4px",
+    background: "var(--border)",
+    borderRadius: "2px",
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: "2px",
+    transition: "width 0.6s ease",
+  },
+  progressLabel: {
+    fontSize: "11px",
+    color: "var(--text3)",
+    whiteSpace: "nowrap",
+  },
+
+  // RIGHT
+  right: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-end",
+    gap: "6px",
+    flexShrink: 0,
+  },
+  zoneBadge: {
+    padding: "4px 10px",
+    borderRadius: "20px",
+    fontSize: "11px",
+    fontWeight: "700",
+    whiteSpace: "nowrap",
+  },
+  score: {
+    fontSize: "14px",
+    fontWeight: "700",
+    color: "var(--accent)",
+  },
+};
