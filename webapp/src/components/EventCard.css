@@ -1,0 +1,88 @@
+.event-card {
+  background-color: #111;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+  display: flex;
+  flex-direction: column;
+}
+
+.event-card:hover {
+  transform: translateY(-8px);
+  border: 1px solid #e6d28f;
+  box-shadow: 0 10px 30px rgba(230, 210, 143, 0.2);
+}
+
+.event-image-container {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+
+.event-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.event-card:hover .event-image {
+  transform: scale(1.05);
+}
+
+.event-time-badge {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background-color: #e6d28f;
+  color: #0b0b0b;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.event-content {
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.event-title {
+  color: #fff;
+  font-size: 22px;
+  margin: 0 0 10px 0;
+  font-weight: 600;
+}
+
+.event-description {
+  color: #ccc;
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 0 0 20px 0;
+  flex-grow: 1;
+}
+
+.event-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid #222;
+  padding-top: 15px;
+}
+
+.event-detail {
+  display: flex;
+  align-items: center;
+  color: #a0a0a0;
+  font-size: 14px;
+}
+
+.detail-icon {
+  margin-right: 10px;
+  font-size: 16px;
+}
