@@ -35,7 +35,10 @@ function Home() {
 
         <div style={styles.overlay}>
           <p style={styles.eyebrow}>Panvel's Homegrown Run Club</p>
-          <h1 style={styles.title}>Momentum Is<br />Everything</h1>
+          <div style={styles.titleWrapper}>
+            <div style={styles.titleBackdrop} />
+            <h1 style={styles.title}>Momentum Is<br />Everything</h1>
+          </div>
           <p style={styles.subtitle}>
             Every Sunday. Every pace. Every person.
           </p>
@@ -182,6 +185,24 @@ const styles = {
     textAlign: "center",
     padding: "0 24px",
   },
+  titleWrapper: {
+    position: "relative",
+    display: "inline-flex",
+    justifyContent: "center",
+    width: "100%",
+    marginBottom: "20px",
+  },
+  titleBackdrop: {
+    position: "absolute",
+    inset: "-12px 0 0",
+    margin: "0 auto",
+    width: "min(90vw, 480px)",
+    height: "180px",
+    background: "rgba(255, 255, 255, 0.15)",
+    borderRadius: "40px",
+    filter: "blur(10px)",
+    zIndex: 0,
+  },
   eyebrow: {
     fontSize: "12px",
     fontWeight: "600",
@@ -191,6 +212,8 @@ const styles = {
     marginBottom: "16px",
   },
   title: {
+    position: "relative",
+    zIndex: 1,
     fontSize: "clamp(48px, 10vw, 96px)",
     fontWeight: "700",
     lineHeight: 1.05,

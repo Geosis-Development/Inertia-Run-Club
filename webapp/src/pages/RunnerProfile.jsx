@@ -90,24 +90,44 @@ export default function RunnerProfile() {
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
+
+    const toBase64 = (file) =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
     try {
-      const formData = new FormData();
-      formData.append("image", file);
-      const res = await fetch(
-        `https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY}`,
-        { method: "POST", body: formData }
-      );
+      const imageBase64 = await toBase64(file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ image: imageBase64 }),
+      });
+
       const data = await res.json();
-      const imageUrl = data.data.url;
+      if (!res.ok) {
+        throw new Error(data?.error || "Upload failed");
+      }
+
+      const imageUrl = data.url;
       const encodedEmail = email.replace(/\./g, "_");
       const docRef = doc(db, "runnerProfiles", encodedEmail);
       const existing = await getDoc(docRef);
       const currentImages = existing.exists()
         ? existing.data().stravaImages || []
         : [];
-      await setDoc(docRef, {
-        stravaImages: [...currentImages, imageUrl],
-      }, { merge: true });
+      await setDoc(
+        docRef,
+        {
+          stravaImages: [...currentImages, imageUrl],
+        },
+        { merge: true }
+      );
     } catch (err) {
       alert("Upload failed. Try again.");
       console.error(err);
