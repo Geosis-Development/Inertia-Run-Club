@@ -161,6 +161,7 @@ function ActivityDetails() {
               />
             </div>
             
+            <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(run.location)}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -185,6 +186,7 @@ function ActivityDetails() {
               />
             </div>
             
+            <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(run.routeMap)}`}
               target="_blank"
               rel="noopener noreferrer"
