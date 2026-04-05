@@ -65,3 +65,277 @@ input, textarea, select {
   background: var(--border);
   border-radius: 3px;
 }
+/* RESPONSIVE NAV */
+@media (max-width: 900px) {
+  nav > div:nth-child(2) {
+    display: none !important;
+  }
+}
+
+@media (min-width: 901px) {
+  nav button[aria-label="Toggle menu"] {
+    display: none !important;
+  }
+}
+@keyframes scrollDown {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(300%); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+/* ── MOBILE RESPONSIVE ── */
+
+@media (max-width: 900px) {
+  /* Hide desktop nav links */
+  nav > div:nth-child(2) {
+    display: none !important;
+  }
+
+  /* Hide logout button in navbar on mobile */
+  nav .logout-desktop {
+    display: none !important;
+  }
+}
+
+@media (min-width: 901px) {
+  /* Hide hamburger on desktop */
+  nav button[aria-label="Toggle menu"] {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+
+  /* ── GLOBAL ── */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ── STATS BARS ── */
+  .stats-bar-wrap {
+    flex-direction: column !important;
+    gap: 24px !important;
+    padding: 40px 24px !important;
+  }
+
+  .stat-divider-line {
+    display: none !important;
+  }
+
+  /* ── HOME HERO ── */
+  .hero-btns-wrap {
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+
+  .hero-btns-wrap a {
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  /* ── FEATURE GRID ── */
+  .feature-grid-wrap {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── EVENT GRID ── */
+  .event-grid-wrap {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── RUN GALLERY ── */
+  .run-gallery-grid {
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
+  }
+
+  .run-gallery-slider {
+    height: 300px !important;
+  }
+
+  .run-gallery-slider img {
+    height: 300px !important;
+  }
+
+  /* ── ACTIVITIES ── */
+  .activities-masonry {
+    column-count: 2 !important;
+  }
+
+  /* ── ACTIVITY DETAILS ── */
+  .activity-info-bar {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+    padding: 24px !important;
+  }
+
+  .activity-info-divider {
+    display: none !important;
+  }
+
+  .activity-join-section {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .activity-join-btn {
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  /* ── LEADERBOARD ── */
+  .leaderboard-tabs-wrap {
+    gap: 6px !important;
+  }
+
+  .leaderboard-tab-btn {
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+  }
+
+  .leaderboard-card-wrap {
+    padding: 14px !important;
+    gap: 10px !important;
+  }
+
+  .leaderboard-zone-badge {
+    display: none !important;
+  }
+
+  .leaderboard-progress-label {
+    display: none !important;
+  }
+
+  /* ── RUNNER PROFILE ── */
+  .runner-stats-bar {
+    padding: 20px 16px !important;
+  }
+
+  .runner-stat-item {
+    padding: 0 16px !important;
+  }
+
+  .runner-strava-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── ADMIN ── */
+  .admin-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .admin-run-card {
+    flex-direction: column !important;
+  }
+
+  .admin-run-img {
+    width: 100% !important;
+    height: 180px !important;
+    object-fit: cover !important;
+  }
+
+  .admin-runner-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .admin-runner-actions {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+  }
+
+  .admin-stats-row {
+    grid-template-columns: 1fr 1fr 1fr !important;
+  }
+
+  .admin-tabs-wrap {
+    gap: 6px !important;
+  }
+
+  .admin-tab-btn {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+
+  /* ── ABOUT ── */
+  .about-story-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+
+  .about-mission-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .about-values-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ── TEAM ── */
+  .team-grid-wrap {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ── SOCIALS ── */
+  .social-card-wrap {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  /* ── REGISTRATION MODAL ── */
+  .reg-modal-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .reg-modal-inner {
+    padding: 28px 20px !important;
+  }
+
+  /* ── GENERAL SECTION PADDING ── */
+  section {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .section-inner {
+    padding: 80px 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .team-grid-wrap {
+    grid-template-columns: 1fr !important;
+  }
+
+  .about-values-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .activities-masonry {
+    column-count: 1 !important;
+  }
+
+  .admin-stats-row {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .leaderboard-card-wrap {
+    gap: 8px !important;
+  }
+
+  .leaderboard-rank-wrap {
+    width: 28px !important;
+  }
+
+  .leaderboard-avatar {
+    width: 40px !important;
+    height: 40px !important;
+  }
+}

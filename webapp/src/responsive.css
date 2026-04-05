@@ -1,0 +1,185 @@
+/* ── GLOBAL MOBILE ── */
+@media (max-width: 768px) {
+
+  /* NAVBAR */
+  nav .desktop-links {
+    display: none !important;
+  }
+
+  /* HERO */
+  .hero-title {
+    font-size: 42px !important;
+  }
+
+  /* STATS BARS */
+  .stats-bar {
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+
+  .stat-divider {
+    display: none !important;
+  }
+
+  .stat-item {
+    padding: 0 !important;
+  }
+
+  /* GRIDS */
+  .feature-grid,
+  .event-grid,
+  .masonry {
+    grid-template-columns: 1fr !important;
+    column-count: 1 !important;
+  }
+
+  /* STORY GRID */
+  .story-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+
+  /* MISSION GRID */
+  .mission-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* VALUES GRID */
+  .values-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* RUN GALLERY */
+  .run-gallery-container {
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
+  }
+
+  /* LEADERBOARD */
+  .leaderboard-card {
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+  }
+
+  .leaderboard-right {
+    width: 100% !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+  }
+
+  /* ACTIVITY DETAILS INFO BAR */
+  .info-bar {
+    flex-direction: column !important;
+    gap: 16px !important;
+    align-items: flex-start !important;
+    padding: 20px 24px !important;
+  }
+
+  .info-divider {
+    display: none !important;
+  }
+
+  /* JOIN SECTION */
+  .join-section {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .join-btn {
+    width: 100% !important;
+  }
+
+  /* RUNNER PROFILE STATS */
+  .stats-row-profile {
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  .stat-num-profile {
+    font-size: 22px !important;
+  }
+
+  /* ADMIN */
+  .admin-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .admin-runner-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .admin-run-card {
+    flex-direction: column !important;
+  }
+
+  .admin-run-img {
+    width: 100% !important;
+    height: 160px !important;
+  }
+
+  .admin-stats-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* SOCIALS */
+  .social-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  /* TEAM */
+  .team-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* REGISTRATION MODAL */
+  .reg-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* GENERAL */
+  .container-pad {
+    padding: 60px 16px !important;
+  }
+
+  .section-pad {
+    padding: 60px 16px !important;
+  }
+
+  .hero-pad {
+    padding: 60px 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .team-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .values-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .leaderboard-tabs {
+    gap: 6px !important;
+  }
+
+  .leaderboard-tab {
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+  }
+
+  .zone-badge {
+    display: none !important;
+  }
+
+  .runner-card-name {
+    font-size: 14px !important;
+  }
+
+  .admin-runner-actions {
+    flex-wrap: wrap !important;
+  }
+}
