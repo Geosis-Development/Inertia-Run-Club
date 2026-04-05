@@ -89,7 +89,9 @@ export default function Navbar() {
 
         {/* LOGO */}
         <Link to="/" style={styles.logoLink}>
-          <img src={logo} alt="Inertia" style={styles.logo} />
+          <div style={styles.logoPill}>
+            <img src={logo} alt="Inertia" style={styles.logo} />
+          </div>
         </Link>
 
         {/* DESKTOP LINKS */}
@@ -545,4 +547,16 @@ const styles = {
     zIndex: 998,
     backdropFilter: "blur(4px)",
   },
+
+  logoPill: {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "6px 14px",
+  borderRadius: "10px",
+  border: "1px solid var(--accent)",
+  background: "rgba(0,245,160,0.04)",
+  transition: "background 0.2s ease, border-color 0.2s ease",
+  },
+
 };
