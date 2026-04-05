@@ -106,13 +106,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* SCROLL INDICATOR */}
-        <div style={styles.scrollIndicator}>
-          <div style={styles.scrollTrack}>
-            <div style={styles.scrollThumb} />
-          </div>
-          <span style={styles.scrollLabel}>scroll</span>
-        </div>
+        
       </div>
 
       {/* ── STATS BAR ── */}

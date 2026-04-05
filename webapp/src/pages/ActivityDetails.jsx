@@ -177,23 +177,24 @@ function ActivityDetails() {
             <h2 style={styles.sectionTitle}>Running Route</h2>
             <div style={styles.mapWrapper}>
               <iframe
-                src={`https://maps.google.com/maps?q=${encodeURIComponent(run.routeMap)}&output=embed`}
+                src={run.routeMap.replace("/edit", "/viewer").replace("usp=sharing", "usp=sharing")}
                 width="100%"
                 height="340"
                 loading="lazy"
                 style={styles.map}
+                allowFullScreen
               />
             </div>
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(run.routeMap)}`}
+    
+              href={run.routeMap}
               target="_blank"
               rel="noopener noreferrer"
               style={styles.mapBtn}
-            >
+            
               Open Route in Google Maps →
             </a>
           </div>
-        )}
+      )}
 
         {/* POST RUN PLAN */}
         {run.postRun && (
