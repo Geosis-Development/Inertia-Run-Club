@@ -160,7 +160,7 @@ function ActivityDetails() {
                 style={styles.map}
               />
             </div>
-            <a
+            
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(run.location)}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -177,17 +177,15 @@ function ActivityDetails() {
             <h2 style={styles.sectionTitle}>Running Route</h2>
             <div style={styles.mapWrapper}>
               <iframe
-                src={run.routeMap.replace("/edit", "/viewer")}
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(run.routeMap)}&output=embed`}
                 width="100%"
                 height="340"
                 loading="lazy"
                 style={styles.map}
-                allowFullScreen
               />
             </div>
             
-            <a
-              href={run.routeMap}
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(run.routeMap)}`}
               target="_blank"
               rel="noopener noreferrer"
               style={styles.mapBtn}
