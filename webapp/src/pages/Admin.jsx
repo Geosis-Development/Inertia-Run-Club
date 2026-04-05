@@ -32,6 +32,16 @@ export default function Admin() {
   const [selectedRunner, setSelectedRunner] = useState(null);
   const [adminNote, setAdminNote] = useState("");
 
+  // Team state
+  const [team, setTeam] = useState([]);
+  const [memberName, setMemberName] = useState("");
+  const [memberRole, setMemberRole] = useState("");
+  const [memberImage, setMemberImage] = useState("");
+  const [memberBio, setMemberBio] = useState("");
+  const [memberInstagram, setMemberInstagram] = useState("");
+  const [memberStrava, setMemberStrava] = useState("");
+  const [editingMemberId, setEditingMemberId] = useState(null);
+
   useEffect(() => {
     const unsubRuns = onSnapshot(collection(db, "runs"), (snap) => {
       setRuns(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
@@ -48,10 +58,15 @@ export default function Admin() {
       setRunners(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     });
 
+    const unsubTeam = onSnapshot(collection(db, "team"), (snap) => {
+      setTeam(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    });
+
     return () => {
       unsubRuns();
       unsubGallery();
       unsubRunners();
+      unsubTeam();
     };
   }, []);
 
@@ -122,7 +137,7 @@ export default function Admin() {
 
   // ── RUNNERS ───────────────────────────────────────────
   const banRunner = async (runner) => {
-    if (!window.confirm(`Ban ${runner.displayName}? They won't be able to access the app.`)) return;
+    if (!window.confirm(`Ban ${runner.displayName}?`)) return;
     await updateDoc(doc(db, "runners", runner.id), { status: "banned" });
   };
 
@@ -138,7 +153,7 @@ export default function Admin() {
   };
 
   const removeRunner = async (runner) => {
-    if (!window.confirm(`Permanently remove ${runner.displayName} from the club?`)) return;
+    if (!window.confirm(`Permanently remove ${runner.displayName}?`)) return;
     await deleteDoc(doc(db, "runners", runner.id));
   };
 
@@ -147,10 +162,62 @@ export default function Admin() {
     r.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // ── TEAM ─────────────────────────────────────────────
+  const createMember = async () => {
+    if (!memberName || !memberRole) {
+      alert("Name and role are required.");
+      return;
+    }
+    await addDoc(collection(db, "team"), {
+      name: memberName,
+      role: memberRole,
+      image: memberImage,
+      bio: memberBio,
+      instagram: memberInstagram,
+      strava: memberStrava,
+    });
+    resetMemberForm();
+  };
+
+  const updateMember = async () => {
+    await updateDoc(doc(db, "team", editingMemberId), {
+      name: memberName,
+      role: memberRole,
+      image: memberImage,
+      bio: memberBio,
+      instagram: memberInstagram,
+      strava: memberStrava,
+    });
+    resetMemberForm();
+  };
+
+  const editMember = (member) => {
+    setMemberName(member.name || "");
+    setMemberRole(member.role || "");
+    setMemberImage(member.image || "");
+    setMemberBio(member.bio || "");
+    setMemberInstagram(member.instagram || "");
+    setMemberStrava(member.strava || "");
+    setEditingMemberId(member.id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const deleteMember = async (id) => {
+    if (!window.confirm("Remove this team member?")) return;
+    await deleteDoc(doc(db, "team", id));
+  };
+
+  const resetMemberForm = () => {
+    setMemberName(""); setMemberRole(""); setMemberImage("");
+    setMemberBio(""); setMemberInstagram(""); setMemberStrava("");
+    setEditingMemberId(null);
+  };
+
   const tabs = [
     { id: "runs", label: "Runs" },
     { id: "gallery", label: "Gallery" },
     { id: "runners", label: `Runners (${runners.length})` },
+    { id: "team", label: `Team (${team.length})` },
   ];
 
   return (
@@ -197,50 +264,42 @@ export default function Admin() {
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Sunday Morning Run" />
               </div>
-
               <div style={styles.field}>
                 <label style={styles.label}>Date *</label>
                 <input style={styles.input} value={date}
                   onChange={(e) => setDate(e.target.value)}
                   placeholder="e.g. Sunday, 6 Apr 2025" />
               </div>
-
               <div style={styles.field}>
                 <label style={styles.label}>Location *</label>
                 <input style={styles.input} value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="e.g. Panvel Lake" />
               </div>
-
               <div style={styles.field}>
                 <label style={styles.label}>Time *</label>
                 <input style={styles.input} value={time}
                   onChange={(e) => setTime(e.target.value)}
                   placeholder="e.g. 6:30 AM" />
               </div>
-
               <div style={styles.field}>
                 <label style={styles.label}>Distance (km)</label>
-                <input style={styles.input} type="number"
-                  value={distance}
+                <input style={styles.input} type="number" value={distance}
                   onChange={(e) => setDistance(e.target.value)}
                   placeholder="e.g. 5" />
               </div>
-
               <div style={styles.field}>
                 <label style={styles.label}>Image URL</label>
                 <input style={styles.input} value={image}
                   onChange={(e) => setImage(e.target.value)}
                   placeholder="https://..." />
               </div>
-
               <div style={styles.field}>
                 <label style={styles.label}>Meetup Location (Maps link)</label>
                 <input style={styles.input} value={meetupLocation}
                   onChange={(e) => setMeetupLocation(e.target.value)}
                   placeholder="Google Maps link" />
               </div>
-
               <div style={styles.field}>
                 <label style={styles.label}>Route Map (Maps link)</label>
                 <input style={styles.input} value={routeMap}
@@ -251,10 +310,12 @@ export default function Admin() {
 
             <div style={styles.field}>
               <label style={styles.label}>Post Run Description</label>
-              <textarea style={{ ...styles.input, minHeight: "100px", resize: "vertical" }}
+              <textarea
+                style={{ ...styles.input, minHeight: "100px", resize: "vertical" }}
                 value={postRun}
                 onChange={(e) => setPostRun(e.target.value)}
-                placeholder="What happens after the run..." />
+                placeholder="What happens after the run..."
+              />
             </div>
 
             <div style={styles.formActions}>
@@ -329,7 +390,7 @@ export default function Admin() {
                 <div key={img.id} style={styles.galleryCard}>
                   <img src={img.image} style={styles.galleryImg} alt="" />
                   <button
-                    style={styles.deleteBtn}
+                    style={{ ...styles.deleteBtn, margin: "8px" }}
                     onClick={() => deleteGalleryImage(img.id)}
                   >
                     Delete
@@ -352,11 +413,10 @@ export default function Admin() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
 
-            {/* STATS ROW */}
             <div style={styles.statsRow}>
               <div style={styles.statCard}>
                 <p style={styles.statNum}>{runners.length}</p>
-                <p style={styles.statLabel}>Total Runners</p>
+                <p style={styles.statLabel}>Total</p>
               </div>
               <div style={styles.statCard}>
                 <p style={styles.statNum}>
@@ -372,7 +432,6 @@ export default function Admin() {
               </div>
             </div>
 
-            {/* RUNNER LIST */}
             <div style={styles.runnerList}>
               {filteredRunners.map((runner) => (
                 <div
@@ -380,11 +439,9 @@ export default function Admin() {
                   style={{
                     ...styles.runnerCard,
                     borderColor: runner.status === "banned"
-                      ? "#ff5c5c55"
-                      : "var(--border)",
+                      ? "#ff5c5c55" : "var(--border)",
                     background: runner.status === "banned"
-                      ? "#ff5c5c08"
-                      : "var(--surface)",
+                      ? "#ff5c5c08" : "var(--surface)",
                   }}
                 >
                   <img
@@ -392,7 +449,6 @@ export default function Admin() {
                     style={styles.runnerAvatar}
                     alt={runner.displayName}
                   />
-
                   <div style={styles.runnerInfo}>
                     <div style={styles.runnerNameRow}>
                       <p style={styles.runnerName}>{runner.displayName}</p>
@@ -412,24 +468,16 @@ export default function Admin() {
                       <p style={styles.adminNote}>📝 {runner.adminNote}</p>
                     )}
                   </div>
-
                   <div style={styles.runnerActions}>
                     {runner.status === "banned" ? (
-                      <button
-                        style={styles.unbanBtn}
-                        onClick={() => unbanRunner(runner)}
-                      >
+                      <button style={styles.unbanBtn} onClick={() => unbanRunner(runner)}>
                         Unban
                       </button>
                     ) : (
-                      <button
-                        style={styles.banBtn}
-                        onClick={() => banRunner(runner)}
-                      >
+                      <button style={styles.banBtn} onClick={() => banRunner(runner)}>
                         Ban
                       </button>
                     )}
-
                     <button
                       style={styles.noteBtn}
                       onClick={() => {
@@ -439,15 +487,119 @@ export default function Admin() {
                     >
                       Note
                     </button>
+                    <button style={styles.deleteBtn} onClick={() => removeRunner(runner)}>
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
+        {/* ── TEAM TAB ── */}
+        {activeTab === "team" && (
+          <div>
+            <h2 style={styles.sectionTitle}>
+              {editingMemberId ? "Edit Member" : "Add Team Member"}
+            </h2>
+
+            <div style={styles.formGrid}>
+              <div style={styles.field}>
+                <label style={styles.label}>Name *</label>
+                <input style={styles.input} value={memberName}
+                  onChange={(e) => setMemberName(e.target.value)}
+                  placeholder="Full name" />
+              </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Role *</label>
+                <input style={styles.input} value={memberRole}
+                  onChange={(e) => setMemberRole(e.target.value)}
+                  placeholder="e.g. Founder, Pacer, Photographer" />
+              </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Photo URL</label>
+                <input style={styles.input} value={memberImage}
+                  onChange={(e) => setMemberImage(e.target.value)}
+                  placeholder="https://..." />
+              </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Instagram URL</label>
+                <input style={styles.input} value={memberInstagram}
+                  onChange={(e) => setMemberInstagram(e.target.value)}
+                  placeholder="https://instagram.com/..." />
+              </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Strava URL</label>
+                <input style={styles.input} value={memberStrava}
+                  onChange={(e) => setMemberStrava(e.target.value)}
+                  placeholder="https://strava.com/athletes/..." />
+              </div>
+            </div>
+
+            <div style={styles.field}>
+              <label style={styles.label}>Bio</label>
+              <textarea
+                style={{ ...styles.input, minHeight: "80px", resize: "vertical" }}
+                value={memberBio}
+                onChange={(e) => setMemberBio(e.target.value)}
+                placeholder="Short bio about this member..."
+              />
+            </div>
+
+            {memberImage && (
+              <img src={memberImage} style={styles.preview} alt="preview" />
+            )}
+
+            <div style={styles.formActions}>
+              {editingMemberId && (
+                <button style={styles.cancelBtn} onClick={resetMemberForm}>
+                  Cancel
+                </button>
+              )}
+              <button
+                style={styles.primaryBtn}
+                onClick={editingMemberId ? updateMember : createMember}
+              >
+                {editingMemberId ? "Update Member" : "Add Member"}
+              </button>
+            </div>
+
+            <h2 style={{ ...styles.sectionTitle, marginTop: "48px" }}>
+              Team Members ({team.length})
+            </h2>
+
+            <div style={styles.teamGrid}>
+              {team.map((member) => (
+                <div key={member.id} style={styles.teamCard}>
+                  {member.image && (
+                    <img
+                      src={member.image}
+                      style={styles.teamImg}
+                      alt={member.name}
+                    />
+                  )}
+                  <div style={styles.teamInfo}>
+                    <p style={styles.teamName}>{member.name}</p>
+                    <p style={styles.teamRole}>{member.role}</p>
+                    {member.bio && (
+                      <p style={styles.runnerMeta}>{member.bio}</p>
+                    )}
+                  </div>
+                  <div style={styles.runnerActions}>
+                    <button
+                      style={styles.editBtn}
+                      onClick={() => editMember(member)}
+                    >
+                      Edit
+                    </button>
                     <button
                       style={styles.deleteBtn}
-                      onClick={() => removeRunner(runner)}
+                      onClick={() => deleteMember(member.id)}
                     >
                       Remove
                     </button>
                   </div>
-
                 </div>
               ))}
             </div>
@@ -470,16 +622,10 @@ export default function Admin() {
               placeholder="Add a note about this runner..."
             />
             <div style={styles.modalActions}>
-              <button
-                style={styles.cancelBtn}
-                onClick={() => setSelectedRunner(null)}
-              >
+              <button style={styles.cancelBtn} onClick={() => setSelectedRunner(null)}>
                 Cancel
               </button>
-              <button
-                style={styles.primaryBtn}
-                onClick={() => saveNote(selectedRunner)}
-              >
+              <button style={styles.primaryBtn} onClick={() => saveNote(selectedRunner)}>
                 Save Note
               </button>
             </div>
@@ -492,354 +638,157 @@ export default function Admin() {
 }
 
 const styles = {
-  page: {
-    marginTop: "64px",
-  },
-  header: {
-    padding: "60px 24px 0",
-    maxWidth: "1000px",
-    margin: "0 auto",
-  },
+  page: { marginTop: "64px" },
+  header: { padding: "60px 24px 0", maxWidth: "1000px", margin: "0 auto" },
   eyebrow: {
-    fontSize: "12px",
-    fontWeight: "600",
-    letterSpacing: "3px",
-    textTransform: "uppercase",
-    color: "var(--accent)",
-    marginBottom: "8px",
+    fontSize: "12px", fontWeight: "600", letterSpacing: "3px",
+    textTransform: "uppercase", color: "var(--accent)", marginBottom: "8px",
   },
   title: {
-    fontSize: "clamp(28px, 5vw, 42px)",
-    fontWeight: "700",
-    color: "var(--text)",
-    marginBottom: "32px",
+    fontSize: "clamp(28px, 5vw, 42px)", fontWeight: "700",
+    color: "var(--text)", marginBottom: "32px",
   },
   tabs: {
-    display: "flex",
-    gap: "8px",
-    padding: "0 24px",
-    maxWidth: "1000px",
-    margin: "0 auto 0",
-    flexWrap: "wrap",
+    display: "flex", gap: "8px", padding: "0 24px",
+    maxWidth: "1000px", margin: "0 auto", flexWrap: "wrap",
   },
   tab: {
-    padding: "10px 20px",
-    borderRadius: "20px",
-    fontSize: "13px",
-    fontWeight: "600",
-    cursor: "pointer",
-    transition: "all 0.2s",
+    padding: "10px 20px", borderRadius: "20px", fontSize: "13px",
+    fontWeight: "600", cursor: "pointer", transition: "all 0.2s",
   },
-  container: {
-    padding: "40px 24px 80px",
-    maxWidth: "1000px",
-    margin: "0 auto",
-  },
+  container: { padding: "40px 24px 80px", maxWidth: "1000px", margin: "0 auto" },
   sectionTitle: {
-    fontSize: "20px",
-    fontWeight: "700",
-    color: "var(--text)",
-    marginBottom: "24px",
-    paddingBottom: "12px",
-    borderBottom: "1px solid var(--border)",
+    fontSize: "20px", fontWeight: "700", color: "var(--text)",
+    marginBottom: "24px", paddingBottom: "12px", borderBottom: "1px solid var(--border)",
   },
   formGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-    gap: "16px",
-    marginBottom: "16px",
+    display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+    gap: "16px", marginBottom: "16px",
   },
-  field: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "6px",
-    marginBottom: "12px",
-  },
+  field: { display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px" },
   label: {
-    fontSize: "11px",
-    fontWeight: "600",
-    color: "var(--text2)",
-    textTransform: "uppercase",
-    letterSpacing: "0.5px",
+    fontSize: "11px", fontWeight: "600", color: "var(--text2)",
+    textTransform: "uppercase", letterSpacing: "0.5px",
   },
   input: {
-    padding: "10px 14px",
-    borderRadius: "8px",
-    border: "1px solid var(--border)",
-    background: "var(--surface)",
-    color: "var(--text)",
-    fontSize: "14px",
-    outline: "none",
-    width: "100%",
+    padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--border)",
+    background: "var(--surface)", color: "var(--text)", fontSize: "14px",
+    outline: "none", width: "100%",
   },
-  formActions: {
-    display: "flex",
-    gap: "12px",
-    marginTop: "8px",
-  },
+  formActions: { display: "flex", gap: "12px", marginTop: "8px" },
   primaryBtn: {
-    background: "var(--accent)",
-    color: "#0a0a0a",
-    border: "none",
-    padding: "12px 24px",
-    borderRadius: "8px",
-    fontWeight: "700",
-    fontSize: "14px",
-    cursor: "pointer",
+    background: "var(--accent)", color: "#0a0a0a", border: "none",
+    padding: "12px 24px", borderRadius: "8px", fontWeight: "700",
+    fontSize: "14px", cursor: "pointer",
   },
   cancelBtn: {
-    background: "none",
-    color: "var(--text2)",
-    border: "1px solid var(--border)",
-    padding: "12px 24px",
-    borderRadius: "8px",
-    fontWeight: "600",
-    fontSize: "14px",
-    cursor: "pointer",
+    background: "none", color: "var(--text2)", border: "1px solid var(--border)",
+    padding: "12px 24px", borderRadius: "8px", fontWeight: "600",
+    fontSize: "14px", cursor: "pointer",
+  },
+  preview: {
+    width: "160px", borderRadius: "10px", marginBottom: "16px",
+    display: "block", border: "1px solid var(--border)",
   },
 
-  // RUNS LIST
-  runList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "12px",
-  },
+  // RUNS
+  runList: { display: "flex", flexDirection: "column", gap: "12px" },
   runCard: {
-    display: "flex",
-    alignItems: "center",
-    gap: "16px",
-    background: "var(--surface)",
-    border: "1px solid var(--border)",
-    borderRadius: "12px",
-    overflow: "hidden",
+    display: "flex", alignItems: "center", gap: "16px",
+    background: "var(--surface)", border: "1px solid var(--border)",
+    borderRadius: "12px", overflow: "hidden",
   },
-  runImg: {
-    width: "80px",
-    height: "80px",
-    objectFit: "cover",
-    flexShrink: 0,
-  },
-  runInfo: {
-    flex: 1,
-    padding: "12px 0",
-  },
-  runTitle: {
-    fontWeight: "600",
-    color: "var(--text)",
-    fontSize: "15px",
-    marginBottom: "4px",
-  },
-  runMeta: {
-    fontSize: "12px",
-    color: "var(--text2)",
-    marginBottom: "2px",
-  },
-  runActions: {
-    display: "flex",
-    gap: "8px",
-    padding: "0 16px",
-    flexShrink: 0,
-  },
+  runImg: { width: "80px", height: "80px", objectFit: "cover", flexShrink: 0 },
+  runInfo: { flex: 1, padding: "12px 0" },
+  runTitle: { fontWeight: "600", color: "var(--text)", fontSize: "15px", marginBottom: "4px" },
+  runMeta: { fontSize: "12px", color: "var(--text2)", marginBottom: "2px" },
+  runActions: { display: "flex", gap: "8px", padding: "0 16px", flexShrink: 0 },
   editBtn: {
-    background: "var(--surface2)",
-    border: "1px solid var(--border)",
-    color: "var(--text)",
-    padding: "6px 14px",
-    borderRadius: "6px",
-    fontSize: "12px",
-    fontWeight: "600",
-    cursor: "pointer",
+    background: "var(--surface2)", border: "1px solid var(--border)",
+    color: "var(--text)", padding: "6px 14px", borderRadius: "6px",
+    fontSize: "12px", fontWeight: "600", cursor: "pointer",
   },
   deleteBtn: {
-    background: "#ff5c5c18",
-    border: "1px solid #ff5c5c55",
-    color: "#ff5c5c",
-    padding: "6px 14px",
-    borderRadius: "6px",
-    fontSize: "12px",
-    fontWeight: "600",
-    cursor: "pointer",
+    background: "#ff5c5c18", border: "1px solid #ff5c5c55", color: "#ff5c5c",
+    padding: "6px 14px", borderRadius: "6px", fontSize: "12px",
+    fontWeight: "600", cursor: "pointer",
   },
 
   // GALLERY
-  preview: {
-    width: "200px",
-    borderRadius: "10px",
-    marginBottom: "16px",
-    display: "block",
-    border: "1px solid var(--border)",
-  },
   galleryGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-    gap: "16px",
-    marginTop: "24px",
+    display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gap: "16px", marginTop: "24px",
   },
   galleryCard: {
-    background: "var(--surface)",
-    border: "1px solid var(--border)",
-    borderRadius: "10px",
-    overflow: "hidden",
-    textAlign: "center",
+    background: "var(--surface)", border: "1px solid var(--border)",
+    borderRadius: "10px", overflow: "hidden", textAlign: "center",
   },
-  galleryImg: {
-    width: "100%",
-    height: "140px",
-    objectFit: "cover",
-    display: "block",
-  },
+  galleryImg: { width: "100%", height: "140px", objectFit: "cover", display: "block" },
 
   // RUNNERS
-  statsRow: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "12px",
-    marginBottom: "28px",
-  },
+  statsRow: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "28px" },
   statCard: {
-    background: "var(--surface)",
-    border: "1px solid var(--border)",
-    borderRadius: "12px",
-    padding: "20px",
-    textAlign: "center",
+    background: "var(--surface)", border: "1px solid var(--border)",
+    borderRadius: "12px", padding: "20px", textAlign: "center",
   },
-  statNum: {
-    fontSize: "32px",
-    fontWeight: "700",
-    color: "var(--accent)",
-    marginBottom: "4px",
-  },
-  statLabel: {
-    fontSize: "12px",
-    color: "var(--text2)",
-    textTransform: "uppercase",
-    letterSpacing: "1px",
-  },
-  runnerList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "12px",
-  },
+  statNum: { fontSize: "32px", fontWeight: "700", color: "var(--accent)", marginBottom: "4px" },
+  statLabel: { fontSize: "12px", color: "var(--text2)", textTransform: "uppercase", letterSpacing: "1px" },
+  runnerList: { display: "flex", flexDirection: "column", gap: "12px" },
   runnerCard: {
-    display: "flex",
-    alignItems: "center",
-    gap: "16px",
-    padding: "16px",
-    borderRadius: "12px",
-    border: "1px solid var(--border)",
-    flexWrap: "wrap",
+    display: "flex", alignItems: "center", gap: "16px", padding: "16px",
+    borderRadius: "12px", border: "1px solid var(--border)", flexWrap: "wrap",
   },
   runnerAvatar: {
-    width: "52px",
-    height: "52px",
-    borderRadius: "50%",
-    objectFit: "cover",
-    flexShrink: 0,
-    border: "2px solid var(--border)",
+    width: "52px", height: "52px", borderRadius: "50%", objectFit: "cover",
+    flexShrink: 0, border: "2px solid var(--border)",
   },
-  runnerInfo: {
-    flex: 1,
-    minWidth: "200px",
-  },
-  runnerNameRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    marginBottom: "4px",
-  },
-  runnerName: {
-    fontWeight: "600",
-    fontSize: "15px",
-    color: "var(--text)",
-  },
+  runnerInfo: { flex: 1, minWidth: "200px" },
+  runnerNameRow: { display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" },
+  runnerName: { fontWeight: "600", fontSize: "15px", color: "var(--text)" },
   bannedBadge: {
-    background: "#ff5c5c18",
-    border: "1px solid #ff5c5c55",
-    color: "#ff5c5c",
-    fontSize: "10px",
-    fontWeight: "700",
-    padding: "2px 8px",
-    borderRadius: "10px",
-    textTransform: "uppercase",
+    background: "#ff5c5c18", border: "1px solid #ff5c5c55", color: "#ff5c5c",
+    fontSize: "10px", fontWeight: "700", padding: "2px 8px",
+    borderRadius: "10px", textTransform: "uppercase",
   },
-  runnerMeta: {
-    fontSize: "12px",
-    color: "var(--text2)",
-    marginBottom: "2px",
-    lineHeight: 1.5,
-  },
-  adminNote: {
-    fontSize: "12px",
-    color: "var(--accent)",
-    marginTop: "4px",
-    fontStyle: "italic",
-  },
-  runnerActions: {
-    display: "flex",
-    gap: "8px",
-    flexShrink: 0,
-    flexWrap: "wrap",
-  },
+  runnerMeta: { fontSize: "12px", color: "var(--text2)", marginBottom: "2px", lineHeight: 1.5 },
+  adminNote: { fontSize: "12px", color: "var(--accent)", marginTop: "4px", fontStyle: "italic" },
+  runnerActions: { display: "flex", gap: "8px", flexShrink: 0, flexWrap: "wrap" },
   banBtn: {
-    background: "#ff5c5c18",
-    border: "1px solid #ff5c5c55",
-    color: "#ff5c5c",
-    padding: "6px 14px",
-    borderRadius: "6px",
-    fontSize: "12px",
-    fontWeight: "600",
-    cursor: "pointer",
+    background: "#ff5c5c18", border: "1px solid #ff5c5c55", color: "#ff5c5c",
+    padding: "6px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: "600", cursor: "pointer",
   },
   unbanBtn: {
-    background: "#00f5a018",
-    border: "1px solid #00f5a055",
-    color: "#00f5a0",
-    padding: "6px 14px",
-    borderRadius: "6px",
-    fontSize: "12px",
-    fontWeight: "600",
-    cursor: "pointer",
+    background: "#00f5a018", border: "1px solid #00f5a055", color: "#00f5a0",
+    padding: "6px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: "600", cursor: "pointer",
   },
   noteBtn: {
-    background: "var(--surface2)",
-    border: "1px solid var(--border)",
-    color: "var(--text)",
-    padding: "6px 14px",
-    borderRadius: "6px",
-    fontSize: "12px",
-    fontWeight: "600",
-    cursor: "pointer",
+    background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)",
+    padding: "6px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: "600", cursor: "pointer",
   },
 
-  // NOTE MODAL
+  // TEAM
+  teamGrid: { display: "flex", flexDirection: "column", gap: "12px" },
+  teamCard: {
+    display: "flex", alignItems: "center", gap: "16px",
+    background: "var(--surface)", border: "1px solid var(--border)",
+    borderRadius: "12px", overflow: "hidden",
+  },
+  teamImg: { width: "72px", height: "72px", objectFit: "cover", flexShrink: 0 },
+  teamInfo: { flex: 1, padding: "12px 0" },
+  teamName: { fontWeight: "600", color: "var(--text)", fontSize: "15px", marginBottom: "2px" },
+  teamRole: { fontSize: "12px", color: "var(--accent)", fontWeight: "600", marginBottom: "4px" },
+
+  // MODAL
   modalOverlay: {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(0,0,0,0.6)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 9999,
-    padding: "24px",
+    position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    zIndex: 9999, padding: "24px",
   },
   modal: {
-    background: "var(--bg)",
-    border: "1px solid var(--border)",
-    borderRadius: "16px",
-    padding: "32px",
-    width: "100%",
-    maxWidth: "480px",
+    background: "var(--bg)", border: "1px solid var(--border)",
+    borderRadius: "16px", padding: "32px", width: "100%", maxWidth: "480px",
   },
-  modalTitle: {
-    fontSize: "18px",
-    fontWeight: "700",
-    color: "var(--text)",
-    marginBottom: "20px",
-  },
-  modalActions: {
-    display: "flex",
-    gap: "12px",
-    marginTop: "16px",
-    justifyContent: "flex-end",
-  },
+  modalTitle: { fontSize: "18px", fontWeight: "700", color: "var(--text)", marginBottom: "20px" },
+  modalActions: { display: "flex", gap: "12px", marginTop: "16px", justifyContent: "flex-end" },
 };
+
