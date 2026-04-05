@@ -177,7 +177,7 @@ function ActivityDetails() {
             <h2 style={styles.sectionTitle}>Running Route</h2>
             <div style={styles.mapWrapper}>
               <iframe
-                src={run.routeMap.replace("/edit", "/viewer").replace("usp=sharing", "usp=sharing")}
+                src={run.routeMap.replace("/edit", "/viewer")}
                 width="100%"
                 height="340"
                 loading="lazy"
@@ -185,16 +185,16 @@ function ActivityDetails() {
                 allowFullScreen
               />
             </div>
-    
+            
               href={run.routeMap}
               target="_blank"
               rel="noopener noreferrer"
               style={styles.mapBtn}
-            
+            >
               Open Route in Google Maps →
             </a>
           </div>
-      )}
+        )}
 
         {/* POST RUN PLAN */}
         {run.postRun && (
