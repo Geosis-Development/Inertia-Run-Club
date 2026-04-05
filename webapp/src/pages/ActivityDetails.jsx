@@ -186,6 +186,7 @@ function ActivityDetails() {
               />
             </div>
             
+            <a
               href={run.routeMap}
               target="_blank"
               rel="noopener noreferrer"
