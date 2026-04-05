@@ -6,7 +6,7 @@ import AnimatedText from "../components/AnimatedText";
 import FeatureCard from "../components/FeatureCard";
 import EventCard from "../components/EventCard";
 import RunGallery from "../components/RunGallery";
-import heroVideo from "../assets/video/hero-video.mp4";
+
 
 function useCountUp(target, duration = 1500, start = false) {
   const [count, setCount] = useState(0);
@@ -68,9 +68,12 @@ export default function Home() {
 
       {/* ── HERO ── */}
       <div style={styles.hero}>
-        <video autoPlay loop muted playsInline style={styles.video}>
-          <source src={heroVideo} type="video/mp4" />
-        </video>
+        <div style={{
+          ...styles.video,
+            backgroundImage: `url(https://i.ibb.co/F4FvDBhB/IMG-2870.jpg)`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+        }} />
 
         <div style={styles.heroOverlay} />
 
@@ -81,7 +84,7 @@ export default function Home() {
           </div>
 
           <AnimatedText
-            text="Momentum Is Everything"
+            text="Inertia Run Club"
             element="h1"
             style={styles.heroTitle}
             stagger={120}
